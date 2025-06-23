@@ -321,13 +321,13 @@ Scene create_scene()
     Model tree_2 = load_object("objects/tree.obj", "textures/colMap.bytes");
     Model dragon = load_object("objects/dragon.obj");
 
-    Transform cube_transform(degrees_to_radians(75), degrees_to_radians(20), 0, vector3(20, 0.5, 5), vector3(1, 1, 1));
-    Transform fox_transform(degrees_to_radians(180), 0, 0, vector3(-0.5, 0, 5), vector3(1, 1, 1) * 0.2);
-    Transform dave_transform(degrees_to_radians(180), 0, 0, vector3(0, 0, 5));
+    Transform cube_transform(degrees_to_radians(75), degrees_to_radians(20), 0, vector3(7, 0.5, 3), vector3(1, 1, 1));
+    Transform fox_transform(0, 0, 0, vector3(0.5, 0, 3), vector3(1, 1, 1) * 0.2);
+    Transform dave_transform(0, 0, 0, vector3(0, 0, 3));
     Transform floor_transform(0, 0, 0, vector3(0, 0, 5));
     Transform tree_1_transform(0, 0, 0, vector3(-4, 0, 3));
     Transform tree_2_transform(0, 0, 0, vector3(4, 0, 7));
-    Transform dragon_transform(0, 0, 0, vector3(-10, 0, 5));
+    Transform dragon_transform(0, 0, 0, vector3(0, 0, 7));
 
     cube.transform = cube_transform;
     fox.transform = fox_transform;
