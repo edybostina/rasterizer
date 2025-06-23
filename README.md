@@ -18,7 +18,7 @@ This project is inspired by [Sebastian Lague's 3D Rasterizer](https://www.youtub
 ## Installation
 1. Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/rasterizer-cpp.git
+    git clone https://github.com/edybostina/rasterizer.git
     cd rasterizer-cpp
     ```
 2. Install SDL2:
