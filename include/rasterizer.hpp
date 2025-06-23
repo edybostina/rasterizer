@@ -42,7 +42,7 @@ void render_chunk(Model &model, Image &image, Camera cam, int start, int end)
         vector3 c = world_to_screen(model.points[i + 2], model.transform, cam, image.width, image.height);
         if (a.getZ() < 0 || b.getZ() < 0 || c.getZ() < 0)
         {
-            continue; // skip triangles that are behind the camera (crude fix) 
+            continue; // skip triangles that are behind the camera (crude fix)
         }
 
         double min_x = std::min({a.getX(), b.getX(), c.getX()});
@@ -81,18 +81,22 @@ void render_chunk(Model &model, Image &image, Camera cam, int start, int end)
                     double w_sum = w0 + w1 + w2;
 
                     // interpolate texture coordinates
-                    vector2 texture_coord = (model.texture_coords[i] * w0 +
-                                             model.texture_coords[i + 1] * w1 +
-                                             model.texture_coords[i + 2] * w2) *
-                                            (1 /
-                                             w_sum);
+                    vector2 texture_coord(0, 0);
+                    if (model.shader.has_texture)
+                    {
+                        texture_coord = (model.texture_coords[i] * w0 +
+                                         model.texture_coords[i + 1] * w1 +
+                                         model.texture_coords[i + 2] * w2) *
+                                        (1 /
+                                         w_sum);
+                    }
                     // interpolate normals
                     vector3 normal = (model.normals[i] * w0 +
                                       model.normals[i + 1] * w1 +
                                       model.normals[i + 2] * w2) *
                                      (1 / w_sum);
                     // TODO: add normals into calculations
-                    image.pixels[get_index(x, y, image.width)] = model.shader.get_colour(texture_coord);
+                    image.pixels[get_index(x, y, image.width)] = model.shader.get_colour(texture_coord, normal);
                     image.depth[get_index(x, y, image.width)] = depth;
                 }
             }
@@ -169,14 +173,23 @@ void render_basic(Model &model, Image &image, Transform transform, Camera cam, d
                     double w1 = weights.getY() * depths_inv.getY();
                     double w2 = weights.getZ() * depths_inv.getZ();
                     double w_sum = w0 + w1 + w2;
+                    vector2 texture_coord(0, 0);
+                    if (model.shader.has_texture)
+                    {
+                        texture_coord = (model.texture_coords[i] * w0 +
+                                         model.texture_coords[i + 1] * w1 +
+                                         model.texture_coords[i + 2] * w2) *
+                                        (1 /
+                                         w_sum);
+                    }
 
-                    vector2 texture_coord = (model.texture_coords[i] * w0 +
-                                             model.texture_coords[i + 1] * w1 +
-                                             model.texture_coords[i + 2] * w2) *
-                                            (1 /
-                                             w_sum);
-
-                    image.pixels[get_index(x, y, image.width)] = model.shader.get_colour(texture_coord);
+                    // interpolate normals
+                    vector3 normal = (model.normals[i] * w0 +
+                                      model.normals[i + 1] * w1 +
+                                      model.normals[i + 2] * w2) *
+                                     (1 / w_sum);
+                    // TODO: add normals into calculations
+                    image.pixels[get_index(x, y, image.width)] = model.shader.get_colour(texture_coord, normal);
                     image.depth[get_index(x, y, image.width)] = depth;
                 }
             }
@@ -301,6 +314,7 @@ void process_model(Model model, Camera cam)
 Scene create_scene()
 {
     std::vector<Model> models;
+    vector3 SUN(0.3, 1, 0.6); // position of the sun in the scene
 
     Model cube = load_object("objects/cube.obj", "textures/grass_block.bmp");
     Model fox = load_object("objects/fox.obj", "textures/colMap.bytes");
@@ -308,13 +322,15 @@ Scene create_scene()
     Model floor = load_object("objects/floor.obj", "textures/tile.bmp");
     Model tree_1 = load_object("objects/tree.obj", "textures/colMap.bytes");
     Model tree_2 = load_object("objects/tree.obj", "textures/colMap.bytes");
+    Model dragon = load_object("objects/dragon.obj");
 
     Transform cube_transform(degrees_to_radians(75), degrees_to_radians(20), 0, vector3(20, 0.5, 5), vector3(1, 1, 1));
-    Transform fox_transform(degrees_to_radians(180), 0, 0, vector3(-0.5, 0, 5), vector3(1,1,1) * 0.2);
+    Transform fox_transform(degrees_to_radians(180), 0, 0, vector3(-0.5, 0, 5), vector3(1, 1, 1) * 0.2);
     Transform dave_transform(degrees_to_radians(180), 0, 0, vector3(0, 0, 5));
     Transform floor_transform(0, 0, 0, vector3(0, 0, 5));
     Transform tree_1_transform(0, 0, 0, vector3(-4, 0, 3));
     Transform tree_2_transform(0, 0, 0, vector3(4, 0, 7));
+    Transform dragon_transform(0, 0, 0, vector3(-10, 0, 5));
 
     cube.transform = cube_transform;
     fox.transform = fox_transform;
@@ -322,8 +338,9 @@ Scene create_scene()
     floor.transform = floor_transform;
     tree_1.transform = tree_1_transform;
     tree_2.transform = tree_2_transform;
+    dragon.transform = dragon_transform;
 
-
+    models.push_back(dragon);
     models.push_back(cube);
     models.push_back(fox);
     models.push_back(dave);
@@ -358,7 +375,7 @@ void real_time_render()
 
     while (running)
     {
-        image.clearDepth();  // clear depth buffer for the next frame
+        image.clearDepth();                        // clear depth buffer for the next frame
         image.clearPixels(vector3(135, 206, 235)); // clear pixel buffer for the next frame
 
         int deltaX = 0, deltaY = 0;
@@ -405,8 +422,6 @@ void real_time_render()
         {
             // this lags the whole thing lol
             // process_model(scene.models[i], scene.camera);
-
-            
 
             render_multithread(scene.models[i], image, scene.camera);
         }

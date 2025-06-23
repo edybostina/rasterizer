@@ -40,9 +40,15 @@ class Texture
 public:
     std::string filename;
     Image image;
-
+    vector3 base_color;
     Texture(const std::string &filename) : filename(filename)
     {
+        if (filename == "_no_texture")
+        {
+            image = Image(1, 1);
+            base_color = vector3(255, 255, 255); // default white color
+            return;
+        }
         std::string ext = filename.substr(filename.find_last_of(".") + 1);
         if (ext == "bytes")
             from_bytes(filename);
@@ -121,6 +127,7 @@ public:
 
     inline vector3 get_color(double u, double v) const
     {
+
         u = clamp(u, 0.0, 1.0);
         v = clamp(v, 0.0, 1.0);
         int x = static_cast<int>(u * (image.width - 1));
@@ -134,16 +141,26 @@ class Shader
 {
 public:
     Texture texture;
-
-    Shader(const std::string &texture_filename) : texture(texture_filename)
+    vector3 directional_light;
+    bool has_texture = false;
+    Shader(const std::string &texture_filename = "_no_texture", const vector3 directional_light = vector3(0.3, 1, 0.6).normalize())
+        : texture(texture_filename), directional_light(directional_light)
     {
         if (texture.image.width == 0 || texture.image.height == 0)
             throw std::runtime_error("Failed to load texture: " + texture_filename);
     }
 
-    inline vector3 get_colour(const vector2 &uv) const
+    inline vector3 get_colour(const vector2 &uv, vector3 normal) const
     {
-        return texture.get_color(uv.getX(), uv.getY());
+        normal = normal.normalize();
+        double light_intensity = (normal.dot(directional_light) + 1) * 0.5;
+        vector3 color = has_texture ? texture.get_color(uv.getX(), uv.getY()) : texture.base_color;
+
+        return vector3(
+            clamp(color.getX() * light_intensity, 0, 255),
+            clamp(color.getY() * light_intensity, 0, 255),
+            clamp(color.getZ() * light_intensity, 0, 255));
+   
     }
 };
 

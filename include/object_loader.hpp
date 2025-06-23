@@ -28,7 +28,7 @@ std::vector<std::string> split(std::string s, std::string delimiter)
     return res;
 }
 
-Model load_object(const std::string &obj, const std::string &texture_filename)
+Model load_object(const std::string &obj, const std::string &texture_filename = "_no_texture", vector3 base_color = vector3(80, 255, 200))
 {
     std::vector<vector3> all_points;
     std::vector<vector3> triangle_points;
@@ -76,6 +76,7 @@ Model load_object(const std::string &obj, const std::string &texture_filename)
             std::vector<std::string> tokens = split(line, " ");
             std::vector<int> face_indices;
             std::vector<int> face_textures;
+            std::vector<int> face_normals;
 
             for (size_t i = 1; i < tokens.size(); ++i)
             {
@@ -83,12 +84,43 @@ Model load_object(const std::string &obj, const std::string &texture_filename)
                 if (parts.empty() || parts[0].empty())
                     throw std::runtime_error("Invalid face format in file: " + obj);
 
-                int index = std::stoi(parts[0]) - 1;
-                int texure_index = std::stoi(parts[1]) - 1;
-                face_indices.push_back(index);
-                face_textures.push_back(texure_index);
+                int input_size = parts.size();
+                int face_index = 0;
+                int texture_index = 0;
+                int normal_index = 0;
+                switch (input_size)
+                {
+                case 1:
+                    face_index = std::stoi(parts[0]) - 1;
+                    face_indices.push_back(face_index);
+                    break;
+                case 2:
+                    face_index = std::stoi(parts[0]) - 1;
+                    texture_index = std::stoi(parts[1]) - 1;
+                    if (texture_filename != "_no_texture")
+                    {
+                        face_indices.push_back(face_index);
+                        face_textures.push_back(texture_index);
+                    }
+                    else
+                    {
+                        face_indices.push_back(face_index);
+                        face_normals.push_back(texture_index);
+                    }
+                    break;
+                case 3:
+                    face_index = std::stoi(parts[0]) - 1;
+                    texture_index = std::stoi(parts[1]) - 1;
+                    normal_index = std::stoi(parts[2]) - 1;
+                    face_indices.push_back(face_index);
+                    face_textures.push_back(texture_index);
+                    face_normals.push_back(normal_index);
+                    break;
+                default:
+                    throw std::runtime_error("Invalid face format in file: " + obj);
+                    break;
+                }
             }
-
             // Triangle fan
             for (size_t i = 1; i + 1 < face_indices.size(); ++i)
             {
@@ -96,19 +128,32 @@ Model load_object(const std::string &obj, const std::string &texture_filename)
                 triangle_points.push_back(all_points[face_indices[i]]);
                 triangle_points.push_back(all_points[face_indices[i + 1]]);
 
-                texture_coords.push_back(texture_coords_vt[face_textures[0]]);
-                texture_coords.push_back(texture_coords_vt[face_textures[i]]);
-                texture_coords.push_back(texture_coords_vt[face_textures[i + 1]]);
+                if (texture_coords_vt.size() > 0)
+                {
+                    texture_coords.push_back(texture_coords_vt[face_textures[0]]);
+                    texture_coords.push_back(texture_coords_vt[face_textures[i]]);
+                    texture_coords.push_back(texture_coords_vt[face_textures[i + 1]]);
+                }
 
-                normals.push_back(normals_vn[face_indices[0]]);
-                normals.push_back(normals_vn[face_indices[i]]);
-                normals.push_back(normals_vn[face_indices[i + 1]]);
+                normals.push_back(normals_vn[face_normals[0]]);
+                normals.push_back(normals_vn[face_normals[i]]);
+                normals.push_back(normals_vn[face_normals[i + 1]]);
             }
         }
     }
 
     file.close();
+
     Transform identity_transform;
+    if (texture_coords.empty())
+    {
+        Model model(triangle_points, normals, texture_coords, identity_transform, Shader(texture_filename));
+        model.shader.has_texture = false; // no texture coordinates, so no texture
+        model.shader.texture.base_color = base_color;
+        return model;
+    }
     Model model(triangle_points, normals, texture_coords, identity_transform, Shader(texture_filename));
+    model.shader.has_texture = true;
+
     return model;
 }
