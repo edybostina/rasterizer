@@ -4,6 +4,8 @@ This project is a real-time 3D rasterizer implemented in C++. It uses SDL2 for r
 
 This project is inspired by [Sebastian Lague's 3D Rasterizer](https://www.youtube.com/watch?v=yyJ-hdISgnw) and is designed to be a learning tool for understanding 3D graphics programming.
 
+[i see you](output.mp4)
+
 ## Features
 - **Real-time rendering**: Render 3D scenes interactively using SDL2.
 - **Multithreaded processing**: Efficient rendering using multiple threads.
