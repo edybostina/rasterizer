@@ -303,12 +303,9 @@ void process_model(Model model, Camera cam)
     for (auto &t : threads)
         t.join();
 
-    // Merge all thread-local results into final new_points
     std::vector<vector3> new_points;
     for (auto &thread_result : thread_local_results)
         new_points.insert(new_points.end(), thread_result.begin(), thread_result.end());
-
-    // You now have all processed points in new_points
 }
 
 Scene create_scene()
