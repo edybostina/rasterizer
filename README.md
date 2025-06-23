@@ -22,7 +22,7 @@ This project is inspired by [Sebastian Lague's 3D Rasterizer](https://www.youtub
 1. Clone the repository:
     ```bash
     git clone https://github.com/edybostina/rasterizer.git
-    cd rasterizer-cpp
+    cd rasterizer
     ```
 2. Install SDL2:
     ```bash
