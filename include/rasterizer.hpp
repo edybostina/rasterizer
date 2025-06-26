@@ -95,7 +95,7 @@ void render_chunk(Model &model, Image &image, Camera cam, int start, int end)
                                       model.normals[i + 1] * w1 +
                                       model.normals[i + 2] * w2) *
                                      (1 / w_sum);
-                    // TODO: add normals into calculations
+
                     image.pixels[get_index(x, y, image.width)] = model.shader.get_colour(texture_coord, normal);
                     image.depth[get_index(x, y, image.width)] = depth;
                 }
@@ -188,7 +188,7 @@ void render_basic(Model &model, Image &image, Transform transform, Camera cam, d
                                       model.normals[i + 1] * w1 +
                                       model.normals[i + 2] * w2) *
                                      (1 / w_sum);
-                    // TODO: add normals into calculations
+
                     image.pixels[get_index(x, y, image.width)] = model.shader.get_colour(texture_coord, normal);
                     image.depth[get_index(x, y, image.width)] = depth;
                 }
@@ -319,7 +319,7 @@ Scene create_scene()
     Model floor = load_object("objects/floor.obj", "textures/tile.bmp");
     Model tree_1 = load_object("objects/tree.obj", "textures/colMap.bytes");
     Model tree_2 = load_object("objects/tree.obj", "textures/colMap.bytes");
-    Model dragon = load_object("objects/dragon.obj");
+    Model dragon = load_object("objects/dragon.obj", "_no_texture", vector3(80, 255, 200));
 
     Transform cube_transform(degrees_to_radians(75), degrees_to_radians(20), 0, vector3(7, 0.5, 3), vector3(1, 1, 1));
     Transform fox_transform(0, 0, 0, vector3(0.5, 0, 3), vector3(1, 1, 1) * 0.2);

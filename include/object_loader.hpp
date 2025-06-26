@@ -28,7 +28,8 @@ std::vector<std::string> split(std::string s, std::string delimiter)
     return res;
 }
 
-Model load_object(const std::string &obj, const std::string &texture_filename = "_no_texture", vector3 base_color = vector3(80, 255, 200))
+// a basic .obj parser
+Model load_object(const std::string &obj, const std::string &texture_filename = "_no_texture", vector3 base_color = vector3(255, 255, 255))
 {
     std::vector<vector3> all_points;
     std::vector<vector3> triangle_points;
@@ -78,9 +79,15 @@ Model load_object(const std::string &obj, const std::string &texture_filename = 
             std::vector<int> face_textures;
             std::vector<int> face_normals;
 
+            std::string splitter = "/";
+            if (line.find("//") != std::string::npos)
+            {
+                splitter = "//";
+            }
+
             for (size_t i = 1; i < tokens.size(); ++i)
             {
-                std::vector<std::string> parts = split(tokens[i], "/");
+                std::vector<std::string> parts = split(tokens[i], splitter);
                 if (parts.empty() || parts[0].empty())
                     throw std::runtime_error("Invalid face format in file: " + obj);
 
@@ -135,9 +142,12 @@ Model load_object(const std::string &obj, const std::string &texture_filename = 
                     texture_coords.push_back(texture_coords_vt[face_textures[i + 1]]);
                 }
 
-                normals.push_back(normals_vn[face_normals[0]]);
-                normals.push_back(normals_vn[face_normals[i]]);
-                normals.push_back(normals_vn[face_normals[i + 1]]);
+                if (normals_vn.size() > 0)
+                {
+                    normals.push_back(normals_vn[face_normals[0]]);
+                    normals.push_back(normals_vn[face_normals[i]]);
+                    normals.push_back(normals_vn[face_normals[i + 1]]);
+                }
             }
         }
     }
@@ -145,15 +155,8 @@ Model load_object(const std::string &obj, const std::string &texture_filename = 
     file.close();
 
     Transform identity_transform;
-    if (texture_coords.empty())
-    {
-        Model model(triangle_points, normals, texture_coords, identity_transform, Shader(texture_filename));
-        model.shader.has_texture = false; // no texture coordinates, so no texture
-        model.shader.texture.base_color = base_color;
-        return model;
-    }
     Model model(triangle_points, normals, texture_coords, identity_transform, Shader(texture_filename));
-    model.shader.has_texture = true;
-
+    model.shader.has_texture = texture_coords.empty() ? false : true;
+    model.shader.texture.base_color = base_color;
     return model;
 }
