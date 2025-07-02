@@ -160,7 +160,6 @@ public:
             clamp(color.getX() * light_intensity, 0, 255),
             clamp(color.getY() * light_intensity, 0, 255),
             clamp(color.getZ() * light_intensity, 0, 255));
-   
     }
 };
 
@@ -262,7 +261,15 @@ public:
         roll += delta_roll;
         cache_valid = false;
     }
+
+    vector3 transform_normal(const vector3 &n)
+    {
+        const auto &base = get_base_vectors();
+        vector3 transformed = transform(base, n);
+        return transformed.normalize();
+    }
 };
+
 // ==================== Model Class ====================
 class Model
 {

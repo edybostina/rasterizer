@@ -96,7 +96,8 @@ void render_chunk(Model &model, Image &image, Camera cam, int start, int end)
                                       model.normals[i + 2] * w2) *
                                      (1 / w_sum);
 
-                    image.pixels[get_index(x, y, image.width)] = model.shader.get_colour(texture_coord, normal);
+                    
+                    image.pixels[get_index(x, y, image.width)] = model.shader.get_colour(texture_coord, model.transform.transform_normal(normal));
                     image.depth[get_index(x, y, image.width)] = depth;
                 }
             }
@@ -308,7 +309,7 @@ void process_model(Model model, Camera cam)
         new_points.insert(new_points.end(), thread_result.begin(), thread_result.end());
 }
 
-Scene create_scene()
+Scene create_main_scene()
 {
     std::vector<Model> models;
     vector3 SUN(0.3, 1, 0.6); // position of the sun in the scene
@@ -350,10 +351,29 @@ Scene create_scene()
     return scene;
 }
 
+Scene create_rotation_scene() {
+    std::vector<Model> models;
+    vector3 SUN(0.3, 1, 0.6);
+
+    Model dragon = load_object("objects/dragon.obj", "_no_texture", vector3(80, 255, 200));
+
+    Transform dragon_transform(0, 0, 0, vector3(0, 0, 7));
+
+    dragon.transform = dragon_transform;
+
+    models.push_back(dragon);
+
+    Camera camera(60.0, Transform(0, 0, 0, vector3(0, 2, -2))); 
+
+    Scene scene(models, camera);
+    return scene;
+}
+
+
 void real_time_render()
 {
 
-    Scene scene = create_scene();
+    Scene scene = create_rotation_scene();
     Image image(WIDTH, HEIGHT);
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -373,7 +393,7 @@ void real_time_render()
     while (running)
     {
         image.clearDepth();                        // clear depth buffer for the next frame
-        image.clearPixels(vector3(135, 206, 235)); // clear pixel buffer for the next frame
+        image.clearPixels(vector3(135, 206, 235)); // clear pixel buffer for the next frame (with a sky color)
 
         int deltaX = 0, deltaY = 0;
         while (SDL_PollEvent(&e))
@@ -419,9 +439,10 @@ void real_time_render()
         {
             // this lags the whole thing lol
             // process_model(scene.models[i], scene.camera);
-
             render_multithread(scene.models[i], image, scene.camera);
         }
+
+        scene.models[0].transform.rotate(degrees_to_radians(1), 0, 0);
 
         std::vector<uint32_t> pixels(WIDTH * HEIGHT);
         frame_writer_multithread(image, pixels.data());
