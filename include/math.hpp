@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -177,5 +178,3 @@ int get_index(int x, int y, int width)
 {
     return y * width + x;
 }
-
-

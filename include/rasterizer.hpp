@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <memory>
@@ -103,7 +104,6 @@ void render_chunk(Model &model, Image &image, Camera cam, int start, int end)
         }
     }
 }
-
 
 void render_multithread(Model &model, Image &image, Camera cam)
 {
