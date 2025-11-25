@@ -96,7 +96,6 @@ void render_chunk(Model &model, Image &image, Camera cam, int start, int end)
                                       model.normals[i + 2] * w2) *
                                      (1 / w_sum);
 
-                    
                     image.pixels[get_index(x, y, image.width)] = model.shader.get_colour(texture_coord, model.transform.transform_normal(normal));
                     image.depth[get_index(x, y, image.width)] = depth;
                 }
@@ -104,6 +103,7 @@ void render_chunk(Model &model, Image &image, Camera cam, int start, int end)
         }
     }
 }
+
 
 void render_multithread(Model &model, Image &image, Camera cam)
 {
@@ -351,7 +351,8 @@ Scene create_main_scene()
     return scene;
 }
 
-Scene create_rotation_scene() {
+Scene create_rotation_scene()
+{
     std::vector<Model> models;
     vector3 SUN(0.3, 1, 0.6);
 
@@ -363,12 +364,11 @@ Scene create_rotation_scene() {
 
     models.push_back(dragon);
 
-    Camera camera(60.0, Transform(0, 0, 0, vector3(0, 2, -2))); 
+    Camera camera(60.0, Transform(0, 0, 0, vector3(0, 2, -2)));
 
     Scene scene(models, camera);
     return scene;
 }
-
 
 void real_time_render()
 {
