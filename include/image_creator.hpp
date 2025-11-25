@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <thread>
 #include "math.hpp"
-#include "util.h"
+#include "util.hpp"
 
 #include "object_loader.hpp"
 #include "rasterizer.hpp"
@@ -39,7 +39,7 @@ void write_image_to_file(Image image, const std::string &filename)
     *reinterpret_cast<u_int32_t *>(bmp_data + 42) = 2835;            // vertical resolution (72 DPI)
     *reinterpret_cast<u_int32_t *>(bmp_data + 46) = 0;               // number of colors in palette
     *reinterpret_cast<u_int32_t *>(bmp_data + 50) = 0;               // important colors
-  
+
     // fill the data
     for (int j = 0; j < image.height; ++j)
     {
