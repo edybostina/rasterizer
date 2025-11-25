@@ -1,2 +1,14 @@
 .vscode
 .history
+
+# CMake build artifacts
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Build outputs
+bin/
+lib/
