@@ -7,6 +7,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <iostream>
+#include <cstdint>
 #include "math.hpp"
 
 // ==================== Image Class ====================
@@ -14,21 +15,21 @@ class Image
 {
 public:
     int width, height;
-    std::vector<vector3> pixels;
-    std::vector<double> depth;
+    std::vector<uint32_t> pixels;
+    std::vector<float> depth;
 
     Image(int width = 0, int height = 0) : width(width), height(height)
     {
-        pixels.resize(width * height, vector3(0, 0, 0));
+        pixels.resize(width * height, 0);
         depth.resize(width * height, std::numeric_limits<float>::max());
     }
 
-    void clearPixels(const vector3 &color = vector3(0, 0, 0))
+    inline void clearPixels(uint32_t color = 0)
     {
         std::fill(pixels.begin(), pixels.end(), color);
     }
 
-    void clearDepth(float val = std::numeric_limits<float>::max())
+    inline void clearDepth(float val = std::numeric_limits<float>::max())
     {
         std::fill(depth.begin(), depth.end(), val);
     }
@@ -39,21 +40,22 @@ class Texture
 {
 public:
     std::string filename;
-    Image image;
+    std::vector<vector3> pixels; // Internal texture storage as float vectors for easier blending
+    int width, height;
     vector3 base_color;
+    
     Texture(const std::string &filename);
 
     void from_bmp(const std::string &filename);
     void from_bytes(const std::string &filename);
 
-    inline vector3 get_color(double u, double v) const
+    inline vector3 get_color(float u, float v) const
     {
-
-        u = clamp(u, 0.0, 1.0);
-        v = clamp(v, 0.0, 1.0);
-        int x = static_cast<int>(u * (image.width - 1));
-        int y = static_cast<int>(v * (image.height - 1));
-        return image.pixels[y * image.width + x];
+        u = clamp(u, 0.0f, 1.0f);
+        v = clamp(v, 0.0f, 1.0f);
+        int x = static_cast<int>(u * (width - 1));
+        int y = static_cast<int>(v * (height - 1));
+        return pixels[y * width + x];
     }
 };
 
@@ -64,18 +66,20 @@ public:
     Texture texture;
     vector3 directional_light;
     bool has_texture = false;
-    Shader(const std::string &texture_filename = "_no_texture", const vector3 directional_light = vector3(0.3, 1, 0.6).normalize());
+    Shader(const std::string &texture_filename = "_no_texture", const vector3 directional_light = vector3(0.3f, 1.0f, 0.6f).normalize());
 
-    inline vector3 get_colour(const vector2 &uv, vector3 normal) const
+    inline uint32_t get_colour(const vector2 &uv, vector3 normal) const
     {
         normal = normal.normalize();
-        double light_intensity = (normal.dot(directional_light) + 1) * 0.5;
+        float light_intensity = (normal.dot(directional_light) + 1.0f) * 0.5f;
         vector3 color = has_texture ? texture.get_color(uv.getX(), uv.getY()) : texture.base_color;
 
-        return vector3(
-            clamp(color.getX() * light_intensity, 0, 255),
-            clamp(color.getY() * light_intensity, 0, 255),
-            clamp(color.getZ() * light_intensity, 0, 255));
+        uint8_t r = static_cast<uint8_t>(clamp(color.getX() * light_intensity, 0.0f, 255.0f));
+        uint8_t g = static_cast<uint8_t>(clamp(color.getY() * light_intensity, 0.0f, 255.0f));
+        uint8_t b = static_cast<uint8_t>(clamp(color.getZ() * light_intensity, 0.0f, 255.0f));
+        
+        // Return packed ARGB8888
+        return (255u << 24) | (r << 16) | (g << 8) | b;
     }
 };
 
@@ -83,41 +87,42 @@ public:
 class Transform
 {
 public:
-    double yaw, pitch, roll;
+    float yaw, pitch, roll;
     vector3 position;
     vector3 scale;
 
     mutable bool cache_valid = false;
-    mutable std::vector<vector3> cached_base, cached_inverse;
+    mutable vector3 cached_base[3];
+    mutable vector3 cached_inverse[3];
 
-    Transform(double yaw = 0, double pitch = 0, double roll = 0, vector3 position = vector3(0, 0, 0), vector3 scale = vector3(1, 1, 1))
+    Transform(float yaw = 0, float pitch = 0, float roll = 0, vector3 position = vector3(0, 0, 0), vector3 scale = vector3(1, 1, 1))
         : yaw(yaw), pitch(pitch), roll(roll), position(position), scale(scale) {}
 
-    static vector3 transform(const std::vector<vector3> &base, const vector3 &p);
-    const std::vector<vector3> &get_base_vectors() const;
-    const std::vector<vector3> &get_inverse_base_vectors() const;
+    static vector3 transform(const vector3 base[3], const vector3 &p);
+    void update_cache() const;
 
     inline vector3 to_world_point(const vector3 &p) const
     {
-        std::vector<vector3> base_vectors = get_base_vectors();
-        base_vectors[0] = base_vectors[0] * scale.getX();
-        base_vectors[1] = base_vectors[1] * scale.getY();
-        base_vectors[2] = base_vectors[2] * scale.getZ();
-        return transform(base_vectors, p) + position;
+        if (!cache_valid) update_cache();
+        vector3 scaled_base[3] = {
+            cached_base[0] * scale.getX(),
+            cached_base[1] * scale.getY(),
+            cached_base[2] * scale.getZ()
+        };
+        return transform(scaled_base, p) + position;
     }
 
     inline vector3 to_local_point(const vector3 &p) const
     {
-        std::vector<vector3> inverse_base_vectors = get_inverse_base_vectors();
+        if (!cache_valid) update_cache();
         vector3 local_point = p - position;
-        local_point = transform(inverse_base_vectors, local_point);
-        local_point.setX(local_point.getX() / scale.getX());
-        local_point.setY(local_point.getY() / scale.getY());
-        local_point.setZ(local_point.getZ() / scale.getZ());
-        return local_point;
+        local_point = transform(cached_inverse, local_point);
+        return vector3(local_point.getX() / scale.getX(),
+                       local_point.getY() / scale.getY(),
+                       local_point.getZ() / scale.getZ());
     }
 
-    void set_rotation(double new_yaw, double new_pitch, double new_roll)
+    void set_rotation(float new_yaw, float new_pitch, float new_roll)
     {
         yaw = new_yaw;
         pitch = new_pitch;
@@ -125,7 +130,7 @@ public:
         cache_valid = false;
     }
 
-    void rotate(double delta_yaw, double delta_pitch, double delta_roll)
+    void rotate(float delta_yaw, float delta_pitch, float delta_roll)
     {
         yaw += delta_yaw;
         pitch += delta_pitch;
@@ -133,11 +138,10 @@ public:
         cache_valid = false;
     }
 
-    vector3 transform_normal(const vector3 &n) const
+    inline vector3 transform_normal(const vector3 &n) const
     {
-        const auto &base = get_base_vectors();
-        vector3 transformed = transform(base, n);
-        return transformed.normalize();
+        if (!cache_valid) update_cache();
+        return transform(cached_base, n).normalize();
     }
 };
 
@@ -167,8 +171,6 @@ public:
 
     inline vector2 get_texture_coord(int idx) const
     {
-        if (idx < 0 || idx >= static_cast<int>(texture_coords.size()))
-            throw std::out_of_range("Texture coordinate index out of range");
         return texture_coords[idx];
     }
 };
@@ -177,10 +179,10 @@ public:
 class Camera
 {
 public:
-    double fov;
+    float fov;
     Transform transform;
 
-    Camera(double fov = 60.0, const Transform &transform = Transform())
+    Camera(float fov = 60.0f, const Transform &transform = Transform())
         : fov(degrees_to_radians(fov)), transform(transform) {}
 };
 

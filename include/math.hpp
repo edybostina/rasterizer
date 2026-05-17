@@ -8,19 +8,19 @@
 class vector3
 {
 private:
-    double x, y, z;
+    float x, y, z;
 
 public:
-    vector3(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
+    inline vector3(float x = 0, float y = 0, float z = 0) : x(x), y(y), z(z) {}
 
-    double magnitude() const
+    inline float magnitude() const
     {
         return std::sqrt(x * x + y * y + z * z);
     }
 
-    vector3 normalize() const
+    inline vector3 normalize() const
     {
-        double mag = magnitude();
+        float mag = magnitude();
         if (mag == 0)
             return vector3(0, 0, 0);
         return vector3(x / mag, y / mag, z / mag);
@@ -32,33 +32,33 @@ public:
         return os;
     }
 
-    double getX() const { return x; }
-    double getY() const { return y; }
-    double getZ() const { return z; }
+    inline float getX() const { return x; }
+    inline float getY() const { return y; }
+    inline float getZ() const { return z; }
 
-    void setX(double newX) { x = newX; }
-    void setY(double newY) { y = newY; }
-    void setZ(double newZ) { z = newZ; }
+    inline void setX(float newX) { x = newX; }
+    inline void setY(float newY) { y = newY; }
+    inline void setZ(float newZ) { z = newZ; }
 
-    vector3 operator+(const vector3 &other) const
+    inline vector3 operator+(const vector3 &other) const
     {
         return vector3(x + other.x, y + other.y, z + other.z);
     }
 
-    vector3 operator-(const vector3 &other) const
+    inline vector3 operator-(const vector3 &other) const
     {
         return vector3(x - other.x, y - other.y, z - other.z);
     }
-    vector3 operator*(double scalar) const
+    inline vector3 operator*(float scalar) const
     {
         return vector3(x * scalar, y * scalar, z * scalar);
     }
 
-    double dot(const vector3 &other) const
+    inline float dot(const vector3 &other) const
     {
         return x * other.x + y * other.y + z * other.z;
     }
-    vector3 cross(const vector3 &other) const
+    inline vector3 cross(const vector3 &other) const
     {
         return vector3(
             y * other.z - z * other.y,
@@ -66,7 +66,7 @@ public:
             x * other.y - y * other.x);
     }
 
-    vector3 lerp(const vector3 &other, double t) const
+    inline vector3 lerp(const vector3 &other, float t) const
     {
         return vector3(
             x + (other.x - x) * t,
@@ -78,19 +78,19 @@ public:
 class vector2
 {
 private:
-    double x, y;
+    float x, y;
 
 public:
-    vector2(double x = 0, double y = 0) : x(x), y(y) {}
+    inline vector2(float x = 0, float y = 0) : x(x), y(y) {}
 
-    double magnitude() const
+    inline float magnitude() const
     {
         return std::sqrt(x * x + y * y);
     }
 
-    vector2 normalize() const
+    inline vector2 normalize() const
     {
-        double mag = magnitude();
+        float mag = magnitude();
         if (mag == 0)
             return vector2(0, 0);
         return vector2(x / mag, y / mag);
@@ -102,31 +102,31 @@ public:
         return os;
     }
 
-    double getX() const { return x; }
-    double getY() const { return y; }
+    inline float getX() const { return x; }
+    inline float getY() const { return y; }
 
-    void setX(double newX) { x = newX; }
-    void setY(double newY) { y = newY; }
+    inline void setX(float newX) { x = newX; }
+    inline void setY(float newY) { y = newY; }
 
-    vector2 operator+(const vector2 &other) const
+    inline vector2 operator+(const vector2 &other) const
     {
         return vector2(x + other.x, y + other.y);
     }
-    vector2 operator-(const vector2 &other) const
+    inline vector2 operator-(const vector2 &other) const
     {
         return vector2(x - other.x, y - other.y);
     }
-    vector2 operator*(double scalar) const
+    inline vector2 operator*(float scalar) const
     {
         return vector2(x * scalar, y * scalar);
     }
 
-    double dot(const vector2 &other) const
+    inline float dot(const vector2 &other) const
     {
         return x * other.x + y * other.y;
     }
 
-    vector2 lerp(const vector2 &other, double t) const
+    inline vector2 lerp(const vector2 &other, float t) const
     {
         return vector2(
             x + (other.x - x) * t,
@@ -135,16 +135,16 @@ public:
 
     // clockwise 90 degrees rotation
     // for counter-clockwise, use vector2(-y, x)
-    vector2 orthogonal() const
+    inline vector2 orthogonal() const
     {
         return vector2(y, -x);
     }
 
-    double signed_triangle_area(const vector2 &a, const vector2 &b, const vector2 &c);
+    float signed_triangle_area(const vector2 &a, const vector2 &b, const vector2 &c);
     bool insideTriangle(vector2 a, vector2 b, vector2 c, vector3 &weights);
 };
 
-double clamp(double value, double min, double max);
-double degrees_to_radians(double degrees);
+float clamp(float value, float min, float max);
+float degrees_to_radians(float degrees);
 vector3 get_random_colour();
 int get_index(int x, int y, int width);

@@ -35,16 +35,16 @@ Model load_object(const std::string &obj, const std::string &texture_filename,
       continue;
 
     if (line.rfind("v ", 0) == 0) {
-      double x, y, z;
-      if (sscanf(line.c_str(), "v %lf %lf %lf", &x, &y, &z) == 3)
+      float x, y, z;
+      if (sscanf(line.c_str(), "v %f %f %f", &x, &y, &z) == 3)
         all_points.emplace_back(x, y, z);
     } else if (line.rfind("vt ", 0) == 0) {
-      double u, v;
-      if (sscanf(line.c_str(), "vt %lf %lf", &u, &v) == 2)
+      float u, v;
+      if (sscanf(line.c_str(), "vt %f %f", &u, &v) == 2)
         all_uvs.emplace_back(u, v);
     } else if (line.rfind("vn ", 0) == 0) {
-      double nx, ny, nz;
-      if (sscanf(line.c_str(), "vn %lf %lf %lf", &nx, &ny, &nz) == 3)
+      float nx, ny, nz;
+      if (sscanf(line.c_str(), "vn %f %f %f", &nx, &ny, &nz) == 3)
         all_normals.emplace_back(nx, ny, nz);
     } else if (line.rfind("f ", 0) == 0) {
       std::vector<std::string> tokens = split(line, " ");

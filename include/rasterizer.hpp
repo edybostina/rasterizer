@@ -15,28 +15,31 @@
 
 extern const int WIDTH;
 extern const int HEIGHT;
-extern const double cam_speed;
-extern const double mouse_sensitivity;
+extern const float cam_speed;
+extern const float mouse_sensitivity;
 extern const int NUM_THREADS;
 
-vector3 world_to_screen(const vector3 &point, Transform transform, Camera cam,
+// Pre-transformed vertex for the rasterizer
+struct RenderVertex {
+    vector3 screen_pos; // x, y, z (depth)
+    vector3 normal;
+    vector2 uv;
+    float inv_z;
+};
+
+struct ModelData {
+    std::vector<RenderVertex> vertices;
+    std::shared_ptr<Shader> shader;
+    Transform transform;
+};
+
+vector3 world_to_screen(const vector3 &point, const Transform &transform, const Camera &cam,
                         int width, int height);
 
-void render_chunk(Model &model, Image &image, Camera cam, int start, int end);
+void render_tiles(std::vector<ModelData> &models, Image &image);
 
-void render_multithread(Model &model, Image &image, Camera cam);
-
-void render_basic(Model &model, Image &image, Transform transform, Camera cam,
-                  double fov);
-
-void write_frame_rows(int startY, int endY, const Image &image,
-                      uint32_t *pixels);
-
-void frame_writer_multithread(const Image &image, uint32_t *pixels);
-
-vector3 vertex_to_view(vector3 p, Transform transform, Camera cam);
-
-vector3 view_to_world(vector3 p_view, Camera cam);
+vector3 vertex_to_view(const vector3 &p, const Transform &transform, const Camera &cam);
+vector3 view_to_world(const vector3 &p_view, const Camera &cam);
 
 struct ClipVertex {
   vector3 pos_view;
@@ -44,13 +47,11 @@ struct ClipVertex {
   vector2 uv;
 };
 
-ClipVertex lerp_clip_vertex(const ClipVertex &v1, const ClipVertex &v2,
-                            double t);
+ClipVertex lerp_clip_vertex(const ClipVertex &v1, const ClipVertex &v2, float t);
 
-Model process_model(const Model &model, Camera cam);
+ModelData process_model(const Model &model, const Camera &cam);
 
 Scene create_main_scene();
-
 Scene create_rotation_scene();
 
 void real_time_render();
