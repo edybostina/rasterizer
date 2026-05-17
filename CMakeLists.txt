@@ -89,7 +89,12 @@ message(STATUS "  Libraries: ${SDL2_LIBRARIES}")
 
 # Create executable
 add_executable(app
-    main/main.cpp
+    src/main.cpp
+    src/math.cpp
+    src/object_loader.cpp
+    src/image_creator.cpp
+    src/util.cpp
+    src/rasterizer.cpp
 )
 
 # Set target properties
